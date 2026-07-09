@@ -23,6 +23,15 @@
   --bg:#07130d;--panel:#102019;--panel2:#173326;--line:#2e5943;--line2:#4d8065;
   --text:#effaf3;--muted:#9db8a8;--turq:#5eead4;--green:#4ade80;--yellow:#facc15;--red:#fb7185;--blue:#38bdf8;--purple:#a78bfa;
 }
+[data-theme="sunset"]{
+  --bg:#1b1013;--panel:#28181e;--panel2:#3a2029;--line:#6c3b49;--line2:#a65f6c;
+  --text:#fff7ed;--muted:#f0b8aa;--turq:#fb923c;--green:#fbbf24;--yellow:#fde68a;--red:#fb7185;--blue:#f472b6;--purple:#c084fc;
+}
+[data-theme="contrast"]{
+  --bg:#000;--panel:#050505;--panel2:#111;--line:#f7f7f7;--line2:#fff;
+  --text:#fff;--muted:#d7d7d7;--turq:#00ffff;--green:#00ff66;--yellow:#ffe600;--red:#ff4d4d;--blue:#66b3ff;--purple:#d18cff;
+  --shadow:0 0 0 2px rgba(255,255,255,.16);
+}
 [data-density="kompakt"]{--gap:6px;--pad:6px;--radius:11px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
@@ -38,6 +47,11 @@ button{
   border-radius:10px;padding:7px 9px;cursor:pointer;white-space:nowrap;transition:.15s ease;font-size:12px;max-width:100%;
 }
 button:hover{border-color:var(--turq);transform:translateY(-1px)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.note:focus-visible,.skip:focus-visible{
+  outline:3px solid var(--yellow);outline-offset:2px;
+}
+.skip{position:fixed;left:10px;top:10px;z-index:50;transform:translateY(-160%);background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:8px;color:var(--text)}
+.skip:focus{transform:none}
 button.primary{border-color:rgba(31,230,211,.55);background:linear-gradient(180deg,rgba(31,230,211,.18),rgba(31,230,211,.06))}
 button.danger{border-color:rgba(255,98,102,.45);background:linear-gradient(180deg,rgba(255,98,102,.15),rgba(255,98,102,.06))}
 input,textarea,select{
@@ -64,9 +78,10 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .brand h1{margin:0;font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand p{margin:2px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;min-width:0;flex-wrap:wrap}
-.main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:var(--gap);min-height:0}
+.main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));grid-auto-flow:dense;gap:var(--gap);min-height:0}
 .main>.panel:nth-child(2),.main>.panel:nth-child(3){grid-column:span 1}
-.panel{display:grid;grid-template-rows:38px minmax(0,1fr)}
+.panel{display:grid;grid-template-rows:38px minmax(0,1fr);resize:both}
+.panel.dragging{opacity:.65;outline:2px dashed var(--yellow)}
 .head{
   border-bottom:1px solid var(--line);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
 }
@@ -84,7 +99,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .editor-grid{display:grid;grid-template-rows:30px minmax(120px,1fr) 30px auto auto;gap:7px;height:100%}
 #noteText{height:100%;min-height:0}
 .colorbar{display:flex;gap:6px;align-items:center}
-.dot{width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer}
+.dot{width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
 .dot.active{outline:2px solid rgba(31,230,211,.45)}
 .calendar-wrap{height:100%;display:grid;grid-template-rows:31px 20px minmax(0,1fr);gap:6px}
 .calbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -112,6 +127,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .help{
   border:1px dashed var(--line2);border-radius:11px;padding:8px;color:var(--muted);font-size:11px;line-height:1.32;background:rgba(255,255,255,.025);overflow:hidden;
 }
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .foot{
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:6px 10px;color:var(--muted);font-size:11px;
 }
@@ -140,13 +156,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 </style>
 </head>
 <body>
+<a class="skip" href="#noteTitle">Direkt zum Editor springen</a>
 <div class="app">
   <header class="top">
     <div class="brand">
       <div class="logo">PV</div>
       <div><h1>Kompakt-Dashboard</h1><p id="saveState">bereit · lokal</p></div>
     </div>
-    <input id="globalSearch" type="search" placeholder="Suche: Titel, Text, Tags, Datum …">
+    <label class="sr-only" for="globalSearch">Globale Suche</label>
+    <input id="globalSearch" type="search" placeholder="Suche: Titel, Text, Tags, Datum …" aria-label="Globale Suche">
     <div class="actions">
       <button class="primary" id="newNoteBtn">+ Notiz</button>
       <button id="exportBtn">Export</button>
@@ -156,8 +174,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
     </div>
   </header>
 
-  <main class="main">
-    <aside class="panel">
+  <main class="main" id="dashboardMain" aria-label="Dashboard-Bereiche">
+    <aside class="panel" data-panel="overview" draggable="true">
       <div class="head"><div><div class="title">☰ Übersicht</div><div class="sub">alles sichtbar</div></div></div>
       <div class="body stack">
         <div class="stats">
@@ -174,16 +192,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
       </div>
     </aside>
 
-    <section class="panel">
+    <section class="panel" data-panel="editor" draggable="true">
       <div class="head">
         <div><div class="title">📝 Editor</div><div class="sub">kompakt</div></div>
         <div class="row"><button id="copyBtn">Kopieren</button><button class="danger" id="deleteBtn">Löschen</button></div>
       </div>
       <div class="body">
         <div class="editor-grid">
-          <input id="noteTitle" placeholder="Titel">
-          <textarea id="noteText" placeholder="Notiztext, Songidee, Todo, Prompt …"></textarea>
-          <input id="noteTags" placeholder="Tags: song, prompt, idee">
+          <label class="sr-only" for="noteTitle">Titel der Notiz</label><input id="noteTitle" placeholder="Titel" aria-describedby="editorHelp">
+          <label class="sr-only" for="noteText">Notiztext</label><textarea id="noteText" placeholder="Notiztext, Songidee, Todo, Prompt …" aria-describedby="editorHelp"></textarea>
+          <label class="sr-only" for="noteTags">Tags der Notiz</label><input id="noteTags" placeholder="Tags: song, prompt, idee">
           <div class="row">
             <select id="noteCategory"><option>Allgemein</option><option>Songtext</option><option>Prompt</option><option>Projekt</option><option>Todo</option><option>Recherche</option><option>Technik</option></select>
             <select id="notePriority"><option value="low">Niedrig</option><option value="normal" selected>Normal</option><option value="high">Hoch</option><option value="critical">Kritisch</option></select>
@@ -194,11 +212,12 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
             <label class="row" style="font-size:11px"><input id="noteDone" type="checkbox" style="width:auto"> OK</label>
             <div class="colorbar" id="colorPicker"></div>
           </div>
+          <div class="sr-only" id="editorHelp">Strg+S speichert. Strg+N erstellt eine neue Notiz. Bereiche können gezogen und an der Ecke vergrößert werden.</div>
         </div>
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-panel="calendar" draggable="true">
       <div class="head">
         <div><div class="title">📅 Monatskalender</div><div class="sub" id="selectedDateLabel">—</div></div>
         <div class="row"><button id="prevMonth">‹</button><button id="todayBtn">Heute</button><button id="nextMonth">›</button></div>
@@ -212,7 +231,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
       </div>
     </section>
 
-    <aside class="panel">
+    <aside class="panel" data-panel="list" draggable="true">
       <div class="head"><div><div class="title">📚 Liste & Filter</div><div class="sub" id="listInfo">—</div></div><button id="sortBtn">Sort</button></div>
       <div class="body filters">
         <select id="filterCategory"><option value="">Alle Kategorien</option><option>Allgemein</option><option>Songtext</option><option>Prompt</option><option>Projekt</option><option>Todo</option><option>Recherche</option><option>Technik</option></select>
@@ -232,9 +251,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
   </footer>
 </div>
 
-<div class="modal" id="importModal">
+<div class="modal" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
   <div class="modal-card">
-    <div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:18px">JSON Import</h2><button id="closeImport">×</button></div>
+    <div class="row" style="justify-content:space-between"><h2 id="importTitle" style="margin:0;font-size:18px">JSON Import</h2><button id="closeImport" aria-label="Import schließen">×</button></div>
     <p style="color:var(--muted);font-size:12px">Backup auswählen oder JSON einfügen.</p>
     <div class="stack">
       <input id="importFile" type="file" accept=".json,application/json">
@@ -243,22 +262,25 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
     </div>
   </div>
 </div>
-<div class="modal" id="helpModal">
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="modal-card">
-    <div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:18px">Kurzhilfe</h2><button id="closeHelp">×</button></div>
+    <div class="row" style="justify-content:space-between"><h2 id="helpTitle" style="margin:0;font-size:18px">Kurzhilfe</h2><button id="closeHelp" aria-label="Hilfe schließen">×</button></div>
     <ul class="help-list">
       <li><b>Speichern:</b> automatisch lokal im Browser; Strg+S speichert sofort.</li>
       <li><b>Kalender:</b> ein Tag filtert die Liste; „+ am Tag“ legt dort eine Notiz an.</li>
       <li><b>Backup:</b> Export erstellt JSON, TXT erstellt eine lesbare Textsammlung.</li>
+      <li><b>Bereiche verschieben:</b> Kopfbereich anfassen und Kachel an eine andere Position ziehen.</li>
+      <li><b>Größe ändern:</b> Kachel unten rechts ziehen. Auf kleinen Bildschirmen bleibt alles untereinander.</li>
+      <li><b>Barrierearm:</b> Tab-Taste springt durch Bedienelemente; gelber Rahmen zeigt den Fokus.</li>
       <li><b>Filter zurücksetzen:</b> „Reset“ zeigt wieder alle Notizen.</li>
     </ul>
   </div>
 </div>
-<div class="modal" id="settingsModal">
+<div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="modal-card">
-    <div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:18px">Einstellungen</h2><button id="closeSettings">×</button></div>
+    <div class="row" style="justify-content:space-between"><h2 id="settingsTitle" style="margin:0;font-size:18px">Einstellungen</h2><button id="closeSettings" aria-label="Einstellungen schließen">×</button></div>
     <div class="stack">
-      <label>Farbtheme<select id="themeSelect"><option value="dark">Dunkel Türkis</option><option value="light">Hell Klar</option><option value="midnight">Midnight Blau</option><option value="forest">Forest Grün</option></select></label>
+      <label>Farbtheme<select id="themeSelect"><option value="dark">Dunkel Türkis</option><option value="light">Hell Klar</option><option value="midnight">Midnight Blau</option><option value="forest">Forest Grün</option><option value="sunset">Sunset Modern</option><option value="contrast">Kontrast Stark</option></select></label>
       <label>Darstellung<select id="densitySelect"><option value="normal">Normal</option><option value="kompakt">Kompakt</option></select></label>
       <label>Listengröße<select id="listLimitSelect"><option value="6">6 Notizen</option><option value="9">9 Notizen</option><option value="12">12 Notizen</option></select></label>
     </div>
@@ -279,7 +301,8 @@ const words=t=>t.trim()?t.trim().split(/\s+/).length:0;
 
 let state={
   notes:[],selectedId:null,selectedDate:todayISO(),viewMonth:new Date().getMonth(),viewYear:new Date().getFullYear(),
-  sortAsc:false,theme:"dark",density:"normal",listLimit:6,filters:{query:"",category:"",priority:"",state:"",tag:"",date:""}
+  sortAsc:false,theme:"dark",density:"normal",listLimit:6,panelOrder:["overview","editor","calendar","list"],
+  filters:{query:"",category:"",priority:"",state:"",tag:"",date:""}
 };
 
 function seed(){
@@ -293,6 +316,13 @@ function load(){
 function applySettings(){
   document.documentElement.dataset.theme=state.theme||"dark";
   document.documentElement.dataset.density=state.density||"normal";
+  applyPanelOrder();
+}
+function applyPanelOrder(){
+  (state.panelOrder||[]).forEach((name,i)=>{
+    const panel=document.querySelector(`[data-panel="${name}"]`);
+    if(panel)panel.style.order=i;
+  });
 }
 function save(silent=true){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
@@ -364,7 +394,7 @@ function renderStats(){
 }
 function renderColors(active){
   const box=$("colorPicker");box.innerHTML="";
-  COLORS.forEach(c=>{const d=document.createElement("span");d.className="dot"+(c===active?" active":"");d.style.background=c;d.onclick=()=>{const n=selected();if(n){n.color=c;save(true);render()}renderColors(c)};box.appendChild(d)});
+  COLORS.forEach(c=>{const d=document.createElement("button");d.type="button";d.className="dot"+(c===active?" active":"");d.style.background=c;d.setAttribute("aria-label","Farbe "+c+" wählen");d.onclick=()=>{const n=selected();if(n){n.color=c;save(true);render()}renderColors(c)};box.appendChild(d)});
 }
 function render(){renderStats();renderNotes();renderCalendar();updateWord();$("globalSearch").value=state.filters.query;$("filterCategory").value=state.filters.category;$("filterPriority").value=state.filters.priority;$("filterState").value=state.filters.state;$("filterTag").value=state.filters.tag;$("themeSelect").value=state.theme||"dark";$("densitySelect").value=state.density||"normal";$("listLimitSelect").value=String(state.listLimit||6)}
 function updateWord(){$("wordCount").textContent=words($("noteText").value)+" Wörter"}
@@ -410,6 +440,18 @@ function bind(){
   $("helpBtn").onclick=()=>$("helpModal").classList.add("open");$("closeHelp").onclick=()=>$("helpModal").classList.remove("open");
   $("runImportBtn").onclick=async()=>{const f=$("importFile").files[0];await importText(f?await f.text():$("importText").value)};
   $("resetAllBtn").onclick=()=>{if(confirm("Alles löschen?")){localStorage.removeItem(STORAGE_KEY);seed();fill(selected());save(true);render()}};
+  let dragged=null;
+  document.querySelectorAll("[data-panel]").forEach(panel=>{
+    panel.addEventListener("dragstart",e=>{if(!e.target.closest(".head"))return e.preventDefault();dragged=panel;panel.classList.add("dragging")});
+    panel.addEventListener("dragend",()=>{panel.classList.remove("dragging");dragged=null});
+    panel.addEventListener("dragover",e=>e.preventDefault());
+    panel.addEventListener("drop",e=>{
+      e.preventDefault();if(!dragged||dragged===panel)return;
+      const order=[...document.querySelectorAll("[data-panel]")].sort((a,b)=>(+a.style.order||0)-(+b.style.order||0)).map(p=>p.dataset.panel);
+      const from=order.indexOf(dragged.dataset.panel),to=order.indexOf(panel.dataset.panel);
+      order.splice(to,0,order.splice(from,1)[0]);state.panelOrder=order;applyPanelOrder();save(true);toast("Bereich verschoben");
+    });
+  });
   document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.key.toLowerCase()==="s"){e.preventDefault();sync();save(false);render()} if(e.ctrlKey&&e.key.toLowerCase()==="n"){e.preventDefault();create()}});
 }
 function clock(){$("clock").textContent=new Date().toLocaleString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
