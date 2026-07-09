@@ -48,17 +48,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 }
 [data-theme="light"] .top,[data-theme="light"] .foot,[data-theme="light"] .panel{background:rgba(255,255,255,.88)}
 .top{
-  display:grid;grid-template-columns:260px minmax(220px,1fr) auto;align-items:center;gap:8px;padding:7px 9px;
+  display:grid;grid-template-columns:minmax(190px,260px) minmax(180px,1fr) auto;align-items:center;gap:8px;padding:7px 9px;
 }
 .brand{display:flex;align-items:center;gap:9px;min-width:0}
 .logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:900;color:var(--turq);border:1px solid rgba(31,230,211,.45);background:rgba(31,230,211,.11)}
 .brand h1{margin:0;font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand p{margin:2px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;min-width:0}
-.main{
-  display:grid;grid-template-columns:210px minmax(320px,.95fr) minmax(390px,1.18fr) minmax(250px,.82fr);
-  gap:8px;min-height:0;
-}
+.main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-height:0}
+.main>.panel:nth-child(1){min-width:180px}.main>.panel:nth-child(2){min-width:280px}.main>.panel:nth-child(3){min-width:340px}.main>.panel:nth-child(4){min-width:220px}
 .panel{display:grid;grid-template-rows:38px minmax(0,1fr)}
 .head{
   border-bottom:1px solid var(--line);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -114,10 +112,12 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
 .modal.open{display:flex}
 .modal-card{width:min(760px,94vw);max-height:88vh;overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;box-shadow:var(--shadow)}
+.help-list{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.45}
 @media(max-width:1180px){
   .app{grid-template-rows:48px minmax(0,1fr) 32px}
   .top{grid-template-columns:210px 1fr auto}
-  .main{grid-template-columns:165px minmax(280px,1fr) minmax(330px,1.08fr) 230px}
+  .main{grid-template-columns:minmax(170px,.7fr) minmax(280px,1fr) minmax(330px,1.1fr)}
+  .main>.panel:nth-child(4){grid-column:1/-1}
   button,input,textarea,select{font-size:11px}.title{font-size:12px}.sub{display:none}
 }
 @media(max-width:900px){
@@ -141,6 +141,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
       <button class="primary" id="newNoteBtn">+ Notiz</button>
       <button id="exportBtn">Export</button>
       <button id="importBtn">Import</button>
+      <button id="helpBtn">Hilfe</button>
       <button id="themeBtn">Theme</button>
     </div>
   </header>
@@ -159,7 +160,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
         <div class="mini-module">📅 Kalender<small>Monatsansicht ohne Scrollen</small></div>
         <div class="mini-module">🔎 Filter<small>Suche, Kategorie, Priorität</small></div>
         <div class="mini-module">💾 Backup<small>JSON Export / Import</small></div>
-        <div class="help">Tipp: <b>Strg+S</b> speichert, <b>Strg+N</b> erstellt eine neue Notiz. Alles läuft offline im Browser.</div>
+        <div class="help">Tipp: <b>Strg+S</b> speichert, <b>Strg+N</b> erstellt eine neue Notiz. Über <b>Hilfe</b> gibt es Kurzinfos zu Backup, Filter und Kalender.</div>
       </div>
     </aside>
 
@@ -230,6 +231,17 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
       <textarea id="importText" style="min-height:170px" placeholder="JSON hier einfügen"></textarea>
       <div class="row"><button class="primary" id="runImportBtn">Import starten</button><button id="cancelImport">Abbrechen</button></div>
     </div>
+  </div>
+</div>
+<div class="modal" id="helpModal">
+  <div class="modal-card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:18px">Kurzhilfe</h2><button id="closeHelp">×</button></div>
+    <ul class="help-list">
+      <li><b>Speichern:</b> automatisch lokal im Browser; Strg+S speichert sofort.</li>
+      <li><b>Kalender:</b> ein Tag filtert die Liste; „+ am Tag“ legt dort eine Notiz an.</li>
+      <li><b>Backup:</b> Export erstellt JSON, TXT erstellt eine lesbare Textsammlung.</li>
+      <li><b>Filter zurücksetzen:</b> „Reset“ zeigt wieder alle Notizen.</li>
+    </ul>
   </div>
 </div>
 <div class="toast-wrap" id="toastWrap"></div>
@@ -331,7 +343,8 @@ function renderColors(active){
 }
 function render(){renderStats();renderNotes();renderCalendar();updateWord();$("globalSearch").value=state.filters.query;$("filterCategory").value=state.filters.category;$("filterPriority").value=state.filters.priority;$("filterState").value=state.filters.state;$("filterTag").value=state.filters.tag}
 function updateWord(){$("wordCount").textContent=words($("noteText").value)+" Wörter"}
-function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;$("toastWrap").appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),250)},2200)}
+function setStatus(msg){$("footerStatus").textContent=msg}
+function toast(msg){setStatus(msg);const t=document.createElement("div");t.className="toast";t.textContent=msg;$("toastWrap").appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),250)},2200)}
 function download(name,txt,type){const b=new Blob([txt],{type});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u)}
 function stamp(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`}
 function exportJSON(){sync();download("provoware_kompakt_backup_"+stamp()+".json",JSON.stringify({version:2,exportedAt:new Date().toISOString(),notes:state.notes},null,2),"application/json");save(true);toast("JSON exportiert")}
@@ -343,25 +356,30 @@ async function importText(txt){
     if(confirm("Vorhandene Notizen ersetzen? OK = ersetzen, Abbrechen = hinzufügen"))state.notes=[];
     state.notes=[...notes.map(n=>({id:n.id||uid(),title:n.title||"",text:n.text||"",tags:Array.isArray(n.tags)?n.tags:[],category:n.category||"Allgemein",priority:n.priority||"normal",color:n.color||COLORS[0],date:n.date||todayISO(),pinned:!!n.pinned,done:!!n.done,createdAt:n.createdAt||new Date().toISOString(),updatedAt:n.updatedAt||new Date().toISOString()})),...state.notes];
     state.selectedId=state.notes[0]?.id||null;fill(selected());save(true);render();$("importModal").classList.remove("open");toast("Import fertig");
-  }catch(e){toast("Importfehler")}
+  }catch(e){toast("Importfehler: Bitte gültige JSON-Datei wählen.")}
 }
 function bind(){
   $("newNoteBtn").onclick=()=>create();$("newOnSelectedBtn").onclick=()=>create(state.selectedDate);$("deleteBtn").onclick=del;
-  $("copyBtn").onclick=()=>navigator.clipboard?.writeText(`${$("noteTitle").value}\n\n${$("noteText").value}`).then(()=>toast("Kopiert"));
+  $("copyBtn").onclick=()=>{
+    const text=`${$("noteTitle").value}\n\n${$("noteText").value}`;
+    if(!navigator.clipboard)return toast("Kopieren nicht möglich");
+    navigator.clipboard.writeText(text).then(()=>toast("Kopiert")).catch(()=>toast("Kopieren nicht möglich"));
+  };
   ["noteTitle","noteText","noteTags","noteCategory","notePriority","noteDate","notePinned","noteDone"].forEach(id=>{$(id).addEventListener("input",autosave);$(id).addEventListener("change",autosave)});
   $("globalSearch").oninput=e=>{state.filters.query=e.target.value;renderNotes()};
   $("filterCategory").onchange=e=>{state.filters.category=e.target.value;save(true);render()};
   $("filterPriority").onchange=e=>{state.filters.priority=e.target.value;save(true);render()};
   $("filterState").onchange=e=>{state.filters.state=e.target.value;save(true);render()};
   $("filterTag").oninput=e=>{state.filters.tag=e.target.value;renderNotes()};
-  $("resetFiltersBtn").onclick=()=>{state.filters={query:"",category:"",priority:"",state:"",tag:"",date:""};save(true);render()};
-  $("sortBtn").onclick=()=>{state.sortAsc=!state.sortAsc;save(true);renderNotes()};
+  $("resetFiltersBtn").onclick=()=>{state.filters={query:"",category:"",priority:"",state:"",tag:"",date:""};save(true);render();toast("Filter zurückgesetzt")};
+  $("sortBtn").onclick=()=>{state.sortAsc=!state.sortAsc;save(true);renderNotes();toast(state.sortAsc?"Älteste zuerst":"Neueste zuerst")};
   $("prevMonth").onclick=()=>{const d=new Date(state.viewYear,state.viewMonth-1,1);state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();save(true);render()};
   $("nextMonth").onclick=()=>{const d=new Date(state.viewYear,state.viewMonth+1,1);state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();save(true);render()};
   $("todayBtn").onclick=()=>{const d=new Date();state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();state.selectedDate=todayISO();save(true);render()};
-  $("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;save(true)};
+  $("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;save(true);toast("Theme gewechselt")};
   $("exportBtn").onclick=exportJSON;$("exportTxtBtn").onclick=exportTXT;
   $("importBtn").onclick=()=>$("importModal").classList.add("open");$("closeImport").onclick=$("cancelImport").onclick=()=>$("importModal").classList.remove("open");
+  $("helpBtn").onclick=()=>$("helpModal").classList.add("open");$("closeHelp").onclick=()=>$("helpModal").classList.remove("open");
   $("runImportBtn").onclick=async()=>{const f=$("importFile").files[0];await importText(f?await f.text():$("importText").value)};
   $("resetAllBtn").onclick=()=>{if(confirm("Alles löschen?")){localStorage.removeItem(STORAGE_KEY);seed();fill(selected());save(true);render()}};
   document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.key.toLowerCase()==="s"){e.preventDefault();sync();save(false);render()} if(e.ctrlKey&&e.key.toLowerCase()==="n"){e.preventDefault();create()}});
