@@ -8,13 +8,22 @@
 :root{
   --bg:#061014;--panel:#0e1e26;--panel2:#132a34;--line:#24424e;--line2:#356170;
   --text:#eaf8fb;--muted:#83a4ad;--turq:#1fe6d3;--green:#39d982;--yellow:#f6c847;
-  --red:#ff6266;--blue:#39a9ff;--purple:#a86cff;--radius:14px;
+  --red:#ff6266;--blue:#39a9ff;--purple:#a86cff;--radius:14px;--gap:8px;--pad:8px;
   --shadow:0 16px 44px rgba(0,0,0,.34);--font:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif;
 }
 [data-theme="light"]{
   --bg:#eef5f7;--panel:#fff;--panel2:#f2f8fa;--line:#c8d9df;--line2:#a7bec7;
   --text:#0b2029;--muted:#58737c;--shadow:0 14px 34px rgba(18,47,59,.12);
 }
+[data-theme="midnight"]{
+  --bg:#090b1f;--panel:#11142e;--panel2:#1b2050;--line:#343a76;--line2:#5661b3;
+  --text:#f1f4ff;--muted:#9ca8db;--turq:#7dd3fc;--green:#86efac;--yellow:#fde68a;--red:#fb7185;--blue:#60a5fa;--purple:#c084fc;
+}
+[data-theme="forest"]{
+  --bg:#07130d;--panel:#102019;--panel2:#173326;--line:#2e5943;--line2:#4d8065;
+  --text:#effaf3;--muted:#9db8a8;--turq:#5eead4;--green:#4ade80;--yellow:#facc15;--red:#fb7185;--blue:#38bdf8;--purple:#a78bfa;
+}
+[data-density="kompakt"]{--gap:6px;--pad:6px;--radius:11px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
 body{
@@ -26,7 +35,7 @@ body{
 button,input,textarea,select{font:inherit;color:var(--text)}
 button{
   border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));
-  border-radius:10px;padding:7px 9px;cursor:pointer;white-space:nowrap;transition:.15s ease;font-size:12px;
+  border-radius:10px;padding:7px 9px;cursor:pointer;white-space:nowrap;transition:.15s ease;font-size:12px;max-width:100%;
 }
 button:hover{border-color:var(--turq);transform:translateY(-1px)}
 button.primary{border-color:rgba(31,230,211,.55);background:linear-gradient(180deg,rgba(31,230,211,.18),rgba(31,230,211,.06))}
@@ -39,8 +48,8 @@ input,textarea,select{
 textarea{resize:none;line-height:1.32}
 input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 0 2px rgba(31,230,211,.10)}
 .app{
-  height:100vh;width:100vw;padding:8px;display:grid;gap:8px;
-  grid-template-rows:50px minmax(0,1fr) 34px;
+  height:100vh;width:100vw;padding:var(--pad);display:grid;gap:var(--gap);
+  grid-template-rows:minmax(48px,auto) minmax(0,1fr) minmax(32px,auto);
 }
 .top,.foot,.panel{
   border:1px solid var(--line);background:rgba(14,30,38,.84);backdrop-filter:blur(16px);
@@ -48,31 +57,31 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 }
 [data-theme="light"] .top,[data-theme="light"] .foot,[data-theme="light"] .panel{background:rgba(255,255,255,.88)}
 .top{
-  display:grid;grid-template-columns:minmax(190px,260px) minmax(180px,1fr) auto;align-items:center;gap:8px;padding:7px 9px;
+  display:grid;grid-template-columns:minmax(170px,260px) minmax(160px,1fr) auto;align-items:center;gap:var(--gap);padding:7px 9px;
 }
 .brand{display:flex;align-items:center;gap:9px;min-width:0}
 .logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:900;color:var(--turq);border:1px solid rgba(31,230,211,.45);background:rgba(31,230,211,.11)}
 .brand h1{margin:0;font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand p{margin:2px 0 0;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;min-width:0}
-.main{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-height:0}
-.main>.panel:nth-child(1){min-width:180px}.main>.panel:nth-child(2){min-width:280px}.main>.panel:nth-child(3){min-width:340px}.main>.panel:nth-child(4){min-width:220px}
+.actions{display:flex;gap:6px;justify-content:flex-end;align-items:center;min-width:0;flex-wrap:wrap}
+.main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:var(--gap);min-height:0}
+.main>.panel:nth-child(2),.main>.panel:nth-child(3){grid-column:span 1}
 .panel{display:grid;grid-template-rows:38px minmax(0,1fr)}
 .head{
   border-bottom:1px solid var(--line);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;
 }
 .title{font-size:13px;font-weight:850;display:flex;gap:7px;align-items:center}
 .sub{font-size:10.5px;color:var(--muted);font-weight:500}
-.body{padding:8px;min-height:0;overflow:hidden}
+.body{padding:var(--pad);min-height:0;overflow:auto}
 .stack{display:flex;flex-direction:column;gap:7px;min-height:0}
-.row{display:flex;gap:6px;align-items:center;min-width:0}
+.row{display:flex;gap:6px;align-items:center;min-width:0;flex-wrap:wrap}
 .row>*{min-width:0}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .stat{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.035);padding:7px}
 .stat b{font-size:18px}.stat span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
 .mini-module{border:1px solid var(--line);border-radius:11px;padding:7px;background:rgba(255,255,255,.03);font-size:12px}
 .mini-module small{display:block;color:var(--muted);font-size:10px;margin-top:1px}
-.editor-grid{display:grid;grid-template-rows:30px 1fr 30px 30px 31px;gap:7px;height:100%}
+.editor-grid{display:grid;grid-template-rows:30px minmax(120px,1fr) 30px auto auto;gap:7px;height:100%}
 #noteText{height:100%;min-height:0}
 .colorbar{display:flex;gap:6px;align-items:center}
 .dot{width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer}
@@ -90,7 +99,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .day.muted{opacity:.35}.day.today{box-shadow:inset 0 0 0 2px rgba(31,230,211,.25)}.day.selected{border-color:var(--yellow)}
 .num{font-size:11px;font-weight:850}.cnt{position:absolute;right:4px;top:4px;font-size:9px;color:var(--turq);font-weight:900}
 .dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}.mdot{width:6px;height:6px;border-radius:50%}
-.note-list{height:100%;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.note-list{height:100%;display:flex;flex-direction:column;gap:6px;overflow:auto}
 .note{
   border:1px solid var(--line);border-left:4px solid var(--turq);border-radius:11px;background:rgba(255,255,255,.035);
   padding:7px;cursor:pointer;min-height:54px;
@@ -114,18 +123,19 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .modal-card{width:min(760px,94vw);max-height:88vh;overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;box-shadow:var(--shadow)}
 .help-list{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.45}
 @media(max-width:1180px){
-  .app{grid-template-rows:48px minmax(0,1fr) 32px}
-  .top{grid-template-columns:210px 1fr auto}
-  .main{grid-template-columns:minmax(170px,.7fr) minmax(280px,1fr) minmax(330px,1.1fr)}
-  .main>.panel:nth-child(4){grid-column:1/-1}
+  .app{grid-template-rows:minmax(48px,auto) minmax(0,1fr) minmax(32px,auto)}
+  .top{grid-template-columns:minmax(170px,210px) 1fr auto}
   button,input,textarea,select{font-size:11px}.title{font-size:12px}.sub{display:none}
 }
 @media(max-width:900px){
-  body{overflow:auto}
-  .app{height:auto;min-height:100vh;overflow:auto;grid-template-rows:auto auto auto}
-  .top,.main,.foot{display:block}
-  .top>*{margin-bottom:6px}.main{min-height:auto}.panel{height:360px;margin-bottom:8px}
   html,body{overflow:auto}
+  .app{height:auto;min-height:100vh;overflow:auto;grid-template-rows:auto auto auto}
+  .top{grid-template-columns:1fr}.top>*{margin-bottom:6px}
+  .main{grid-template-columns:1fr;min-height:auto}.panel{min-height:340px}.foot{grid-template-columns:1fr;text-align:left}.right{text-align:left}
+}
+@media(max-width:560px){
+  .actions,.row{align-items:stretch}.actions button,.row button{flex:1 1 auto}
+  .stats{grid-template-columns:1fr}.calendar-wrap{grid-template-rows:auto 20px minmax(260px,1fr)}
 }
 </style>
 </head>
@@ -142,7 +152,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
       <button id="exportBtn">Export</button>
       <button id="importBtn">Import</button>
       <button id="helpBtn">Hilfe</button>
-      <button id="themeBtn">Theme</button>
+      <button id="settingsBtn">Einstellungen</button>
     </div>
   </header>
 
@@ -244,6 +254,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
     </ul>
   </div>
 </div>
+<div class="modal" id="settingsModal">
+  <div class="modal-card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0;font-size:18px">Einstellungen</h2><button id="closeSettings">×</button></div>
+    <div class="stack">
+      <label>Farbtheme<select id="themeSelect"><option value="dark">Dunkel Türkis</option><option value="light">Hell Klar</option><option value="midnight">Midnight Blau</option><option value="forest">Forest Grün</option></select></label>
+      <label>Darstellung<select id="densitySelect"><option value="normal">Normal</option><option value="kompakt">Kompakt</option></select></label>
+      <label>Listengröße<select id="listLimitSelect"><option value="6">6 Notizen</option><option value="9">9 Notizen</option><option value="12">12 Notizen</option></select></label>
+    </div>
+  </div>
+</div>
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
@@ -259,7 +279,7 @@ const words=t=>t.trim()?t.trim().split(/\s+/).length:0;
 
 let state={
   notes:[],selectedId:null,selectedDate:todayISO(),viewMonth:new Date().getMonth(),viewYear:new Date().getFullYear(),
-  sortAsc:false,theme:"dark",filters:{query:"",category:"",priority:"",state:"",tag:"",date:""}
+  sortAsc:false,theme:"dark",density:"normal",listLimit:6,filters:{query:"",category:"",priority:"",state:"",tag:"",date:""}
 };
 
 function seed(){
@@ -268,7 +288,11 @@ function seed(){
 }
 function load(){
   try{const raw=localStorage.getItem(STORAGE_KEY);raw?state={...state,...JSON.parse(raw)}:seed()}catch(e){seed()}
+  applySettings();
+}
+function applySettings(){
   document.documentElement.dataset.theme=state.theme||"dark";
+  document.documentElement.dataset.density=state.density||"normal";
 }
 function save(silent=true){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
@@ -309,13 +333,14 @@ function filtered(){
 }
 function renderNotes(){
   const list=$("noteList"),arr=filtered();list.innerHTML="";$("listInfo").textContent=arr.length+" sichtbar";
-  arr.slice(0,6).forEach(n=>{
+  const limit=Number(state.listLimit)||6;
+  arr.slice(0,limit).forEach(n=>{
     const el=document.createElement("div");el.className="note"+(n.id===state.selectedId?" active":"");el.style.borderLeftColor=n.color||COLORS[0];
     el.innerHTML=`<h3>${n.pinned?"📌 ":""}${esc(n.title||"Unbenannt")}${n.done?" ✓":""}</h3><div class="meta"><span>${esc(n.date)}</span><span>${esc(n.category)}</span><span>${(n.tags||[]).slice(0,2).map(x=>"#"+esc(x)).join(" ")}</span></div><div class="prev">${esc(n.text||"kein Text")}</div>`;
     el.onclick=()=>{sync();state.selectedId=n.id;state.selectedDate=n.date;fill(n);save(true);render()};
     list.appendChild(el);
   });
-  if(arr.length>6){const more=document.createElement("div");more.className="help";more.textContent="+"+(arr.length-6)+" weitere Treffer – Suche/Filter nutzen.";list.appendChild(more)}
+  if(arr.length>limit){const more=document.createElement("div");more.className="help";more.textContent="+"+(arr.length-limit)+" weitere Treffer – Suche/Filter nutzen.";list.appendChild(more)}
   if(!arr.length)list.innerHTML='<div class="help">Keine Treffer.</div>';
 }
 function renderCalendar(){
@@ -341,7 +366,7 @@ function renderColors(active){
   const box=$("colorPicker");box.innerHTML="";
   COLORS.forEach(c=>{const d=document.createElement("span");d.className="dot"+(c===active?" active":"");d.style.background=c;d.onclick=()=>{const n=selected();if(n){n.color=c;save(true);render()}renderColors(c)};box.appendChild(d)});
 }
-function render(){renderStats();renderNotes();renderCalendar();updateWord();$("globalSearch").value=state.filters.query;$("filterCategory").value=state.filters.category;$("filterPriority").value=state.filters.priority;$("filterState").value=state.filters.state;$("filterTag").value=state.filters.tag}
+function render(){renderStats();renderNotes();renderCalendar();updateWord();$("globalSearch").value=state.filters.query;$("filterCategory").value=state.filters.category;$("filterPriority").value=state.filters.priority;$("filterState").value=state.filters.state;$("filterTag").value=state.filters.tag;$("themeSelect").value=state.theme||"dark";$("densitySelect").value=state.density||"normal";$("listLimitSelect").value=String(state.listLimit||6)}
 function updateWord(){$("wordCount").textContent=words($("noteText").value)+" Wörter"}
 function setStatus(msg){$("footerStatus").textContent=msg}
 function toast(msg){setStatus(msg);const t=document.createElement("div");t.className="toast";t.textContent=msg;$("toastWrap").appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),250)},2200)}
@@ -376,7 +401,10 @@ function bind(){
   $("prevMonth").onclick=()=>{const d=new Date(state.viewYear,state.viewMonth-1,1);state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();save(true);render()};
   $("nextMonth").onclick=()=>{const d=new Date(state.viewYear,state.viewMonth+1,1);state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();save(true);render()};
   $("todayBtn").onclick=()=>{const d=new Date();state.viewYear=d.getFullYear();state.viewMonth=d.getMonth();state.selectedDate=todayISO();save(true);render()};
-  $("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;save(true);toast("Theme gewechselt")};
+  $("settingsBtn").onclick=()=>$("settingsModal").classList.add("open");$("closeSettings").onclick=()=>$("settingsModal").classList.remove("open");
+  $("themeSelect").onchange=e=>{state.theme=e.target.value;applySettings();save(true);toast("Theme gewechselt")};
+  $("densitySelect").onchange=e=>{state.density=e.target.value;applySettings();save(true);toast("Darstellung angepasst")};
+  $("listLimitSelect").onchange=e=>{state.listLimit=Number(e.target.value)||6;save(true);renderNotes();toast("Listengröße angepasst")};
   $("exportBtn").onclick=exportJSON;$("exportTxtBtn").onclick=exportTXT;
   $("importBtn").onclick=()=>$("importModal").classList.add("open");$("closeImport").onclick=$("cancelImport").onclick=()=>$("importModal").classList.remove("open");
   $("helpBtn").onclick=()=>$("helpModal").classList.add("open");$("closeHelp").onclick=()=>$("helpModal").classList.remove("open");
