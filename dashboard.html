@@ -313,6 +313,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 "use strict";
 const STORAGE_KEY="provoware.compact.notes.calendar.v2";
 const COLORS=["#1fe6d3","#39d982","#f6c847","#ff6266","#39a9ff","#a86cff"];
+const MODULES={
+  proSong:{id:"proSong",frameId:"proSongFrame",statusId:"proSongStatus",storageKey:"proSong",title:"Profi-Songeditor"}
+};
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8);
 const todayISO=()=>new Date().toISOString().slice(0,10);
@@ -350,9 +353,6 @@ function applyPanelOrder(){
 }
 function save(silent=true,syncModules=true){
   if(syncModules)syncSong();
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
-function save(silent=true){
-  syncSong();
   try{
     localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
   }catch(e){
@@ -367,15 +367,18 @@ function save(silent=true){
 let tmr;function autosave(){clearTimeout(tmr);tmr=setTimeout(()=>{sync();save(true);render();},250)}
 function selected(){return state.notes.find(n=>n.id===state.selectedId)||null}
 
-function sendModuleConfig(){
-  const frame=$("proSongFrame");
-  frame?.contentWindow?.postMessage({source:"provoware-shell",type:"init",id:"proSong",theme:state.theme||"dark",payload:state.proSong||{}},"*");
+function modulePayload(mod){return state[mod.storageKey]||{}}
+function sendModuleConfig(id){
+  Object.values(MODULES).filter(mod=>!id||mod.id===id).forEach(mod=>{
+    const frame=$(mod.frameId);
+    frame?.contentWindow?.postMessage({source:"provoware-shell",type:"init",protocol:1,id:mod.id,theme:state.theme||"dark",payload:modulePayload(mod)},"*");
+  });
 }
 function syncSong(){sendModuleConfig()}
 window.addEventListener("message",e=>{
-  const m=e.data||{};if(m.source!=="provoware-module"||m.id!=="proSong")return;
-  if(m.type==="ready"){$("proSongStatus").textContent="aktiv · "+(m.config?.title||"Modul");sendModuleConfig()}
-  if(m.type==="update"){state.proSong={...(state.proSong||{}),...(m.payload||{})};save(true,false)}
+  const m=e.data||{},mod=MODULES[m.id];if(m.source!=="provoware-module"||!mod)return;
+  if(m.type==="ready"){$(mod.statusId).textContent="aktiv · "+(m.config?.title||mod.title);sendModuleConfig(mod.id)}
+  if(m.type==="update"){state[mod.storageKey]={...modulePayload(mod),...(m.payload||{})};save(true,false)}
 });
 
 function fill(n){

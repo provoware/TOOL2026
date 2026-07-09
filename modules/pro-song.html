@@ -26,16 +26,17 @@ const CONFIG={id:"proSong",title:"Profi-Songeditor",version:1,templates:["Intro"
 const $=id=>document.getElementById(id);
 let song={title:"",text:"",structure:CONFIG.structures[0],tone:CONFIG.tones[0],bpm:"",key:""};
 function fillSelect(id,items,value){$(id).innerHTML=items.map(x=>`<option${x===value?" selected":""}>${x}</option>`).join("")}
-function sync(){song={title:$('songTitle').value.trim(),text:$('songText').value,structure:$('songStructure').value,tone:$('songTone').value,bpm:$('songBpm').value.trim(),key:$('songKey').value.trim()};parent.postMessage({source:"provoware-module",type:"update",id:CONFIG.id,payload:song},"*")}
+function post(type,data={}){parent.postMessage({source:"provoware-module",type,protocol:1,id:CONFIG.id,...data},"*")}
+function sync(){song={title:$('songTitle').value.trim(),text:$('songText').value,structure:$('songStructure').value,tone:$('songTone').value,bpm:$('songBpm').value.trim(),key:$('songKey').value.trim()};post("update",{payload:song})}
 function fill(data={}){song={...song,...data};$('songTitle').value=song.title||"";$('songText').value=song.text||"";fillSelect('songStructure',CONFIG.structures,song.structure);fillSelect('songTone',CONFIG.tones,song.tone);$('songBpm').value=song.bpm||"";$('songKey').value=song.key||""}
 function insertTemplate(name){const text=$('songText'),block=(text.value&&!text.value.endsWith('\n')?'\n\n':'')+'['+name+']\n';text.setRangeText(block,text.selectionStart,text.selectionEnd,'end');sync()}
 function renderTemplates(){CONFIG.templates.forEach(name=>{const b=document.createElement('button');b.type='button';b.draggable=true;b.className='chip';b.textContent=name;b.onclick=()=>insertTemplate(name);b.ondragstart=e=>e.dataTransfer.setData('text/plain','['+name+']\n');$('songTemplates').appendChild(b)})}
-window.addEventListener('message',e=>{const m=e.data||{};if(m.source!=="provoware-shell"||m.type!=="init")return;document.documentElement.dataset.theme=m.theme||"dark";fill(m.payload);$('moduleState').textContent='mit Hauptseite verbunden'});
+window.addEventListener('message',e=>{const m=e.data||{};if(m.source!=="provoware-shell"||m.type!=="init"||m.id!==CONFIG.id)return;document.documentElement.dataset.theme=m.theme||"dark";fill(m.payload);$('moduleState').textContent='mit Hauptseite verbunden'});
 ['songTitle','songText','songStructure','songTone','songBpm','songKey'].forEach(id=>{$(id).addEventListener('input',sync);$(id).addEventListener('change',sync)});
 $('songText').addEventListener('dragover',e=>e.preventDefault());$('songText').addEventListener('drop',e=>{e.preventDefault();$('songText').setRangeText(e.dataTransfer.getData('text/plain'),$('songText').selectionStart,$('songText').selectionEnd,'end');sync()});
 $('copyBtn').onclick=()=>navigator.clipboard?.writeText(`${$('songTitle').value}\n${$('songStructure').value} · ${$('songTone').value} · ${$('songBpm').value} BPM · ${$('songKey').value}\n\n${$('songText').value}`);
 $('clearBtn').onclick=()=>{if(confirm('Songeditor leeren?')){fill({title:'',text:'',bpm:'',key:''});sync()}};
-renderTemplates();fill();parent.postMessage({source:"provoware-module",type:"ready",id:CONFIG.id,config:CONFIG},"*");
+renderTemplates();fill();post("ready",{config:CONFIG});
 </script>
 </body>
 </html>
