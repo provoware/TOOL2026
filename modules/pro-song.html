@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profi-Songeditor Modul</title>
+<style>
+:root{--bg:#071217;--panel:#0e1e26;--panel2:#132a34;--line:#24424e;--line2:#356170;--text:#f4fdff;--muted:#b7d0d7;--turq:#1fe6d3;--yellow:#f6c847;--radius:14px;--gap:8px;--pad:8px;--font:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+[data-theme="light"]{--bg:#f2f8fa;--panel:#fff;--panel2:#edf6f8;--line:#9eb8c2;--line2:#7896a3;--text:#071821;--muted:#385964}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:var(--font);color:var(--text);background:linear-gradient(135deg,rgba(31,230,211,.10),transparent 38%),var(--bg);overflow:hidden}button,input,textarea,select{font:inherit;color:var(--text)}button{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:10px;padding:7px 9px;cursor:pointer;font-size:12px}button:hover{border-color:var(--turq)}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;background:rgba(5,14,18,.58);padding:7px 8px;outline:none;font-size:12px;min-width:0}textarea{resize:none;line-height:1.32}.module{height:100%;display:grid;grid-template-rows:30px minmax(110px,1fr) 30px auto auto auto;gap:7px;padding:var(--pad)}.topline,.row,.tray{display:flex;gap:6px;align-items:center;min-width:0}.topline{justify-content:space-between}.badge{border:1px solid var(--line2);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:11px;background:rgba(255,255,255,.04)}.tray{flex-wrap:wrap}.chip{border-color:rgba(168,108,255,.48);background:linear-gradient(180deg,rgba(168,108,255,.16),rgba(168,108,255,.05))}.help{border:1px dashed var(--line2);border-radius:11px;padding:8px;color:var(--text);font-size:11px;line-height:1.4;background:rgba(255,255,255,.055);overflow:hidden}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<div class="module" aria-describedby="songHelp">
+  <div class="topline"><span class="badge" id="moduleState">Modul bereit</span><button id="copyBtn">Kopieren</button><button id="clearBtn">Leeren</button></div>
+  <label class="sr-only" for="songText">Songtext</label><textarea id="songText" placeholder="Songtext hier schreiben. Vorlagen per Klick oder Drag & Drop einfügen."></textarea>
+  <label class="sr-only" for="songTitle">Songtitel</label><input id="songTitle" placeholder="Songtitel / Arbeitstitel">
+  <div class="tray" id="songTemplates"></div>
+  <div class="row"><select id="songStructure"></select><select id="songTone"></select></div>
+  <div class="row"><input id="songBpm" inputmode="numeric" placeholder="BPM, z. B. 128"><input id="songKey" placeholder="Tonart, z. B. Am"></div>
+  <div class="help" id="songHelp">Eigenes HTML-Modul: bringt Vorlagen und Auswahlwerte selbst mit, speichert aber über die Hauptseite lokal.</div>
+</div>
+<script>
+"use strict";
+const CONFIG={id:"proSong",title:"Profi-Songeditor",version:1,templates:["Intro","Verse","Pre-Chorus","Chorus","Bridge","Outro"],structures:["Pop-Song","Rap/Hook","Ballade","Satire-Song","Freie Struktur"],tones:["Klar","Emotional","Druckvoll","Humorvoll","Düster"]};
+const $=id=>document.getElementById(id);
+let song={title:"",text:"",structure:CONFIG.structures[0],tone:CONFIG.tones[0],bpm:"",key:""};
+function fillSelect(id,items,value){$(id).innerHTML=items.map(x=>`<option${x===value?" selected":""}>${x}</option>`).join("")}
+function sync(){song={title:$('songTitle').value.trim(),text:$('songText').value,structure:$('songStructure').value,tone:$('songTone').value,bpm:$('songBpm').value.trim(),key:$('songKey').value.trim()};parent.postMessage({source:"provoware-module",type:"update",id:CONFIG.id,payload:song},"*")}
+function fill(data={}){song={...song,...data};$('songTitle').value=song.title||"";$('songText').value=song.text||"";fillSelect('songStructure',CONFIG.structures,song.structure);fillSelect('songTone',CONFIG.tones,song.tone);$('songBpm').value=song.bpm||"";$('songKey').value=song.key||""}
+function insertTemplate(name){const text=$('songText'),block=(text.value&&!text.value.endsWith('\n')?'\n\n':'')+'['+name+']\n';text.setRangeText(block,text.selectionStart,text.selectionEnd,'end');sync()}
+function renderTemplates(){CONFIG.templates.forEach(name=>{const b=document.createElement('button');b.type='button';b.draggable=true;b.className='chip';b.textContent=name;b.onclick=()=>insertTemplate(name);b.ondragstart=e=>e.dataTransfer.setData('text/plain','['+name+']\n');$('songTemplates').appendChild(b)})}
+window.addEventListener('message',e=>{const m=e.data||{};if(m.source!=="provoware-shell"||m.type!=="init")return;document.documentElement.dataset.theme=m.theme||"dark";fill(m.payload);$('moduleState').textContent='mit Hauptseite verbunden'});
+['songTitle','songText','songStructure','songTone','songBpm','songKey'].forEach(id=>{$(id).addEventListener('input',sync);$(id).addEventListener('change',sync)});
+$('songText').addEventListener('dragover',e=>e.preventDefault());$('songText').addEventListener('drop',e=>{e.preventDefault();$('songText').setRangeText(e.dataTransfer.getData('text/plain'),$('songText').selectionStart,$('songText').selectionEnd,'end');sync()});
+$('copyBtn').onclick=()=>navigator.clipboard?.writeText(`${$('songTitle').value}\n${$('songStructure').value} · ${$('songTone').value} · ${$('songBpm').value} BPM · ${$('songKey').value}\n\n${$('songText').value}`);
+$('clearBtn').onclick=()=>{if(confirm('Songeditor leeren?')){fill({title:'',text:'',bpm:'',key:''});sync()}};
+renderTemplates();fill();parent.postMessage({source:"provoware-module",type:"ready",id:CONFIG.id,config:CONFIG},"*");
+</script>
+</body>
+</html>
