@@ -51,6 +51,10 @@ button:hover{border-color:var(--turq);transform:translateY(-1px)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.note:focus-visible,.skip:focus-visible{
   outline:3px solid var(--yellow);outline-offset:2px;
 }
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+  button:hover{transform:none}
+}
 .skip{position:fixed;left:10px;top:10px;z-index:50;transform:translateY(-160%);background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:8px;color:var(--text)}
 .skip:focus{transform:none}
 button.primary{border-color:rgba(31,230,211,.55);background:linear-gradient(180deg,rgba(31,230,211,.18),rgba(31,230,211,.06))}
@@ -259,7 +263,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
   </main>
 
   <footer class="foot">
-    <div class="status"><span class="green"></span><span id="footerStatus">Auto-Save aktiv</span></div>
+    <div class="status"><span class="green"></span><span id="footerStatus" role="status" aria-live="polite">Auto-Save aktiv</span></div>
     <div id="wordCount">0 Wörter</div>
     <div class="right" id="clock">--:--</div>
   </footer>
@@ -303,7 +307,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
     </div>
   </div>
 </div>
-<div class="toast-wrap" id="toastWrap"></div>
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 "use strict";
@@ -347,8 +351,18 @@ function applyPanelOrder(){
 function save(silent=true,syncModules=true){
   if(syncModules)syncSong();
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+function save(silent=true){
+  syncSong();
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+  }catch(e){
+    setStatus("Speichern blockiert – Export empfohlen");
+    if(!silent) toast("Speichern blockiert – bitte JSON exportieren");
+    return false;
+  }
   $("saveState").textContent="gespeichert · "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
   if(!silent) toast("Gespeichert");
+  return true;
 }
 let tmr;function autosave(){clearTimeout(tmr);tmr=setTimeout(()=>{sync();save(true);render();},250)}
 function selected(){return state.notes.find(n=>n.id===state.selectedId)||null}
