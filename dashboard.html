@@ -9,6 +9,7 @@
   --bg:#061014;--panel:#0e1e26;--panel2:#132a34;--line:#24424e;--line2:#356170;
   --text:#f4fdff;--muted:#b7d0d7;--turq:#1fe6d3;--green:#39d982;--yellow:#f6c847;
   --red:#ff6266;--blue:#39a9ff;--purple:#a86cff;--radius:14px;--gap:8px;--pad:8px;
+  --glow:0 0 0 1px rgba(31,230,211,.12),0 18px 50px rgba(0,0,0,.38);
   --shadow:0 16px 44px rgba(0,0,0,.34);--font:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif;
 }
 [data-theme="light"]{
@@ -71,7 +72,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 }
 .top,.foot,.panel{
   border:1px solid var(--line);background:rgba(14,30,38,.84);backdrop-filter:blur(16px);
-  border-radius:var(--radius);box-shadow:var(--shadow);min-width:0;min-height:0;overflow:hidden;
+  border-radius:var(--radius);box-shadow:var(--glow);min-width:0;min-height:0;overflow:hidden;
 }
 [data-theme="light"] .top,[data-theme="light"] .foot,[data-theme="light"] .panel{background:rgba(255,255,255,.88)}
 .top{
@@ -102,11 +103,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 .stat b{font-size:18px}.stat span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
 .mini-module{border:1px solid var(--line);border-radius:11px;padding:7px;background:rgba(255,255,255,.03);font-size:12px}
 .mini-module small{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.module-frame{width:100%;height:100%;border:0;border-radius:12px;background:var(--panel2);display:block}
 .editor-grid{display:grid;grid-template-rows:30px minmax(120px,1fr) 30px auto auto;gap:7px;height:100%}
-.song-grid{display:grid;grid-template-rows:30px minmax(120px,1fr) 30px auto auto auto;gap:7px;height:100%}
-.template-tray{display:flex;gap:6px;flex-wrap:wrap}
-.template-chip{border-color:rgba(168,108,255,.48);background:linear-gradient(180deg,rgba(168,108,255,.16),rgba(168,108,255,.05))}
-#noteText,#songText{height:100%;min-height:0}
+#noteText{height:100%;min-height:0}
 .colorbar{display:flex;gap:6px;align-items:center}
 .dot{width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
 .dot.active{outline:2px solid rgba(31,230,211,.45)}
@@ -195,7 +194,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
         </div>
         <div class="mini-module">📝 Notizen<small>Titel, Tags, Datum, Farbe</small></div>
         <div class="mini-module">📅 Kalender<small>Monatsansicht ohne Scrollen</small></div>
-        <div class="mini-module">🎼 Profi-Songeditor<small>Eigenständig, Vorlagen, Konfiguration</small></div>
+        <div class="mini-module">🎼 Profi-Songeditor<small id="proSongStatus">Modul lädt …</small></div>
         <div class="mini-module">🔎 Filter<small>Suche, Kategorie, Priorität</small></div>
         <div class="mini-module">💾 Backup<small>JSON Export / Import</small></div>
         <div class="help">Tipp: <b>Strg+S</b> speichert sofort, <b>Strg+N</b> erstellt eine neue Notiz. In den Einstellungen kann „Fenster automatisch anpassen“ alle Kacheln gleichmäßig im freien Platz verteilen.</div>
@@ -229,21 +228,10 @@ input:focus,textarea:focus,select:focus{border-color:var(--turq);box-shadow:0 0 
 
     <section class="panel" data-panel="proSong" draggable="true">
       <div class="head">
-        <div><div class="title">🎼 Profi-Songeditor</div><div class="sub">eigenständig · Vorlagen</div></div>
-        <div class="row"><button id="songCopyBtn">Kopieren</button><button id="songClearBtn">Leeren</button></div>
+        <div><div class="title">🎼 Profi-Songeditor</div><div class="sub">externes Modul · eigene Konfiguration</div></div>
       </div>
       <div class="body">
-        <div class="song-grid" aria-describedby="songHelp">
-          <label class="sr-only" for="songTitle">Songtitel</label><input id="songTitle" placeholder="Songtitel / Arbeitstitel">
-          <label class="sr-only" for="songText">Songtext</label><textarea id="songText" placeholder="Songtext hier schreiben. Vorlagen per Klick oder Drag & Drop einfügen."></textarea>
-          <label class="sr-only" for="songTemplates">Bereichsvorlagen</label><div class="template-tray" id="songTemplates"></div>
-          <div class="row">
-            <select id="songStructure"><option>Pop-Song</option><option>Rap/Hook</option><option>Ballade</option><option>Satire-Song</option><option>Freie Struktur</option></select>
-            <select id="songTone"><option>Klar</option><option>Emotional</option><option>Druckvoll</option><option>Humorvoll</option><option>Düster</option></select>
-          </div>
-          <div class="row"><input id="songBpm" inputmode="numeric" placeholder="BPM, z. B. 128"><input id="songKey" placeholder="Tonart, z. B. Am"></div>
-          <div class="help" id="songHelp">Eigenes Modul: Songtitel, Text und Vorgaben werden lokal und getrennt von den Notizen gespeichert. Vorlagen per Klick oder Ziehen an der Cursorposition einfügen.</div>
-        </div>
+        <iframe class="module-frame" id="proSongFrame" src="modules/pro-song.html" title="Profi-Songeditor Modul" loading="eager"></iframe>
       </div>
     </section>
 
@@ -351,6 +339,7 @@ function applySettings(){
   document.documentElement.dataset.theme=state.theme||"dark";
   document.documentElement.dataset.density=state.density||"normal";
   document.documentElement.dataset.autofit=state.autoFit===false?"off":"on";
+  sendModuleConfig();
   applyPanelOrder();
 }
 function applyPanelOrder(){
@@ -359,6 +348,9 @@ function applyPanelOrder(){
     if(panel)panel.style.order=i;
   });
 }
+function save(silent=true,syncModules=true){
+  if(syncModules)syncSong();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
 function save(silent=true){
   syncSong();
   try{
@@ -375,31 +367,17 @@ function save(silent=true){
 let tmr;function autosave(){clearTimeout(tmr);tmr=setTimeout(()=>{sync();save(true);render();},250)}
 function selected(){return state.notes.find(n=>n.id===state.selectedId)||null}
 
-function syncSong(){
-  if(!$('songTitle'))return;
-  state.proSong={
-    ...(state.proSong||{}),
-    title:$('songTitle').value.trim(),text:$('songText').value,structure:$('songStructure').value,
-    tone:$('songTone').value,bpm:$('songBpm').value.trim(),key:$('songKey').value.trim()
-  };
+function sendModuleConfig(){
+  const frame=$("proSongFrame");
+  frame?.contentWindow?.postMessage({source:"provoware-shell",type:"init",id:"proSong",theme:state.theme||"dark",payload:state.proSong||{}},"*");
 }
-function fillSong(){
-  const song=state.proSong||{};
-  $('songTitle').value=song.title||'';$('songText').value=song.text||'';$('songStructure').value=song.structure||'Pop-Song';
-  $('songTone').value=song.tone||'Klar';$('songBpm').value=song.bpm||'';$('songKey').value=song.key||'';renderSongTemplates();
-}
-function insertSongTemplate(name){
-  const text=$('songText'),label='['+name+']';
-  const block=(text.value&& !text.value.endsWith('\n')?'\n\n':'')+label+'\n';
-  text.setRangeText(block,text.selectionStart,text.selectionEnd,'end');autosave();toast(name+' eingefügt');
-}
-function renderSongTemplates(){
-  const box=$('songTemplates');if(!box)return;box.innerHTML='';
-  (state.proSong?.templates||[]).forEach(name=>{
-    const b=document.createElement('button');b.type='button';b.draggable=true;b.className='template-chip';b.textContent=name;
-    b.onclick=()=>insertSongTemplate(name);b.ondragstart=e=>e.dataTransfer.setData('text/plain','['+name+']\n');box.appendChild(b);
-  });
-}
+function syncSong(){sendModuleConfig()}
+window.addEventListener("message",e=>{
+  const m=e.data||{};if(m.source!=="provoware-module"||m.id!=="proSong")return;
+  if(m.type==="ready"){$("proSongStatus").textContent="aktiv · "+(m.config?.title||"Modul");sendModuleConfig()}
+  if(m.type==="update"){state.proSong={...(state.proSong||{}),...(m.payload||{})};save(true,false)}
+});
+
 function fill(n){
   $("noteTitle").value=n?.title||"";$("noteText").value=n?.text||"";$("noteTags").value=(n?.tags||[]).join(", ");
   $("noteCategory").value=n?.category||"Allgemein";$("notePriority").value=n?.priority||"normal";$("noteDate").value=n?.date||state.selectedDate||todayISO();
@@ -471,23 +449,19 @@ function setStatus(msg){$("footerStatus").textContent=msg}
 function toast(msg){setStatus(msg);const t=document.createElement("div");t.className="toast";t.textContent=msg;$("toastWrap").appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),250)},2200)}
 function download(name,txt,type){const b=new Blob([txt],{type});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u)}
 function stamp(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`}
-function exportJSON(){sync();download("provoware_kompakt_backup_"+stamp()+".json",JSON.stringify({version:2,exportedAt:new Date().toISOString(),notes:state.notes},null,2),"application/json");save(true);toast("JSON exportiert")}
+function exportJSON(){sync();download("provoware_kompakt_backup_"+stamp()+".json",JSON.stringify({version:3,exportedAt:new Date().toISOString(),notes:state.notes,proSong:state.proSong},null,2),"application/json");save(true);toast("JSON exportiert")}
 function exportTXT(){sync();download("provoware_notizen_"+stamp()+".txt",state.notes.map(n=>`# ${n.title||"Unbenannt"}\n${n.date} · ${n.category} · ${(n.tags||[]).join(", ")}\n\n${n.text}\n\n---\n`).join("\n"),"text/plain");toast("TXT exportiert")}
 async function importText(txt){
   try{
     const data=JSON.parse(txt),notes=Array.isArray(data)?data:data.notes;
     if(!Array.isArray(notes))throw new Error("no notes");
+    if(data.proSong)state.proSong={...(state.proSong||{}),...data.proSong};
     if(confirm("Vorhandene Notizen ersetzen? OK = ersetzen, Abbrechen = hinzufügen"))state.notes=[];
     state.notes=[...notes.map(n=>({id:n.id||uid(),title:n.title||"",text:n.text||"",tags:Array.isArray(n.tags)?n.tags:[],category:n.category||"Allgemein",priority:n.priority||"normal",color:n.color||COLORS[0],date:n.date||todayISO(),pinned:!!n.pinned,done:!!n.done,createdAt:n.createdAt||new Date().toISOString(),updatedAt:n.updatedAt||new Date().toISOString()})),...state.notes];
     state.selectedId=state.notes[0]?.id||null;fill(selected());save(true);render();$("importModal").classList.remove("open");toast("Import fertig");
   }catch(e){toast("Importfehler: Bitte gültige JSON-Datei wählen.")}
 }
 function bind(){
-  ["songTitle","songText","songStructure","songTone","songBpm","songKey"].forEach(id=>{$(id).addEventListener("input",autosave);$(id).addEventListener("change",autosave)});
-  $("songText").addEventListener("dragover",e=>e.preventDefault());
-  $("songText").addEventListener("drop",e=>{e.preventDefault();$("songText").setRangeText(e.dataTransfer.getData("text/plain"),$("songText").selectionStart,$("songText").selectionEnd,"end");autosave()});
-  $("songCopyBtn").onclick=()=>{const text=`${$("songTitle").value}\n${$("songStructure").value} · ${$("songTone").value} · ${$("songBpm").value} BPM · ${$("songKey").value}\n\n${$("songText").value}`;navigator.clipboard?.writeText(text).then(()=>toast("Song kopiert")).catch(()=>toast("Kopieren nicht möglich"))};
-  $("songClearBtn").onclick=()=>{if(confirm("Songeditor leeren?")){state.proSong={...state.proSong,title:"",text:"",bpm:"",key:""};fillSong();save(true);toast("Songeditor geleert")}};
   $("newNoteBtn").onclick=()=>create();$("newOnSelectedBtn").onclick=()=>create(state.selectedDate);$("deleteBtn").onclick=del;
   $("copyBtn").onclick=()=>{
     const text=`${$("noteTitle").value}\n\n${$("noteText").value}`;
@@ -530,7 +504,7 @@ function bind(){
   document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.key.toLowerCase()==="s"){e.preventDefault();sync();save(false);render()} if(e.ctrlKey&&e.key.toLowerCase()==="n"){e.preventDefault();create()}});
 }
 function clock(){$("clock").textContent=new Date().toLocaleString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
-load();bind();fill(selected());fillSong();render();clock();setInterval(clock,15000);setInterval(()=>{sync();save(true)},120000);
+load();bind();fill(selected());render();sendModuleConfig();clock();setInterval(clock,15000);setInterval(()=>{sync();save(true)},120000);
 </script>
 </body>
 </html>

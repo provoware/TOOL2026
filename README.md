@@ -10,4 +10,5 @@ Lokales Provoware Kompakt-Dashboard für Notizen, Kalender, Filter und Backups.
 - Einstellungen im Dashboard: Farbtheme, kompakte Darstellung und sichtbare Listengröße.
 - Farbthemes: Dunkel Türkis, Hell Klar, Midnight Blau, Forest Grün, Sunset Modern und Kontrast Stark mit verbesserten Text- und Hilfekontrasten.
 - Speicherung bleibt lokal im Browser; Export und Import laufen offline über JSON/TXT.
-- Eigenständiger Profi-Songeditor: separat gespeicherter Arbeitsbereich mit Bereichsvorlagen, Drag & Drop, Struktur-, Stimmungs-, BPM- und Tonartfeldern.
+- Der Profi-Songeditor liegt als eigenes HTML-Modul unter `modules/pro-song.html`, bringt Vorlagen und Auswahlwerte selbst mit und tauscht Daten über die Hauptseite aus.
+- Die Hauptseite koordiniert Modulstatus, Theme und lokale Speicherung; das Modul bleibt offline nutzbar.
