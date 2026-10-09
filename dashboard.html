@@ -318,8 +318,8 @@ const MODULES={
 };
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8);
-const todayISO=()=>new Date().toISOString().slice(0,10);
-const fmt=d=>new Date(d).toISOString().slice(0,10);
+const fmt=d=>{const date=new Date(d),p=n=>String(n).padStart(2,"0");return `${date.getFullYear()}-${p(date.getMonth()+1)}-${p(date.getDate())}`};
+const todayISO=()=>fmt(new Date());
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const words=t=>t.trim()?t.trim().split(/\s+/).length:0;
 
