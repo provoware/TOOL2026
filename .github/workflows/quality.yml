@@ -2,6 +2,7 @@ name: Kalender-Regressionsprüfung
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
