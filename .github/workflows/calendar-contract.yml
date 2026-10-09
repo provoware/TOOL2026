@@ -1,0 +1,33 @@
+name: Kalender und JavaScript
+
+on:
+  pull_request:
+    paths:
+      - "dashboard.html"
+      - "tests/dashboard.test.mjs"
+      - ".github/workflows/calendar-contract.yml"
+  push:
+    branches: [main]
+    paths:
+      - "dashboard.html"
+      - "tests/dashboard.test.mjs"
+      - ".github/workflows/calendar-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  calendar-contract:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Kalender- und Syntaxverhalten prüfen
+        run: node --test tests/dashboard.test.mjs
