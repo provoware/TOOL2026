@@ -318,8 +318,14 @@ const MODULES={
 };
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8);
-const todayISO=()=>new Date().toISOString().slice(0,10);
-const fmt=d=>new Date(d).toISOString().slice(0,10);
+// Kalendertage sind lokale Tage; UTC würde rund um Mitternacht auf ein anderes Datum springen.
+const localISO=date=>{
+  const d=new Date(date);
+  const pad=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+};
+const todayISO=()=>localISO(new Date());
+const fmt=localISO;
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const words=t=>t.trim()?t.trim().split(/\s+/).length:0;
 
