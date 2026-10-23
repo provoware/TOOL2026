@@ -46,3 +46,27 @@ process.stdout.write(JSON.stringify({
     assert.deepEqual(actual, { formatted: expected, today: expected }, timezone);
   }
 });
+
+
+test("Beschädigter JSON-Import lässt Notizen und Songeditor unverändert", async () => {
+  const start = embedded.indexOf("async function importText(txt){");
+  const end = embedded.indexOf("\nfunction bind(){", start);
+  assert.ok(start >= 0 && end > start, "Importfunktion fehlt");
+  const source = embedded.slice(start, end);
+  const createImport = new Function(
+    "state", "uid", "COLORS", "todayISO", "confirm", "fill", "selected", "save", "render", "$", "toast",
+    source + "\nreturn importText;"
+  );
+  const state = { notes: [{ id: "keep", text: "Wichtig" }], proSong: { title: "Alter Song" }, selectedId: "keep" };
+  const original = JSON.stringify(state);
+  const output = [];
+  const doImport = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
+    () => {}, () => state.notes[0], () => {}, () => {},
+    () => ({ classList: { remove() {} } }), msg => output.push(msg));
+  await doImport(JSON.stringify({ notes: [{ id: "eins" }, null], proSong: { title: "Unerwünscht" } }));
+  assert.equal(JSON.stringify(state), original, "Fehlerhafter Import darf Daten nicht verändern");
+  assert.match(output.at(-1), /Importfehler/);
+  await doImport(JSON.stringify({ notes: [{ id: "neu", title: "Gültig" }], proSong: { title: "Neu" } }));
+  assert.equal(state.notes[0].id, "neu");
+  assert.equal(state.proSong.title, "Neu");
+});
