@@ -70,3 +70,54 @@ test("Beschädigter JSON-Import lässt Notizen und Songeditor unverändert", asy
   assert.equal(state.notes[0].id, "neu");
   assert.equal(state.proSong.title, "Neu");
 });
+
+test("Import weist beschädigte Notizfelder ohne Zustandsänderung zurück", async () => {
+  const start = embedded.indexOf("async function importText(txt){");
+  const end = embedded.indexOf("\nfunction bind(){", start);
+  assert.ok(start >= 0 && end > start);
+  const createImport = new Function(
+    "state", "uid", "COLORS", "todayISO", "confirm", "fill", "selected", "save", "render", "$", "toast",
+    embedded.slice(start, end) + "\nreturn importText;"
+  );
+  for (const broken of [
+    { notes: [{ id: "neu", tags: [null] }] },
+    { notes: [{ id: "neu", text: ["kein Text"] }] },
+    { notes: [{ id: "neu", pinned: "ja" }] },
+    { notes: [{ id: "neu", tags: "keine Liste" }] },
+    { notes: [{ id: "neu", title: "Okay" }], proSong: { title: ["ungültig"] } },
+    { notes: [{ id: "neu", title: "Okay" }], proSong: { templates: [null] } },
+  ]) {
+    const state = { notes: [{ id: "keep", text: "Wichtig" }], proSong: { title: "Alter Song" }, selectedId: "keep" };
+    const original = JSON.stringify(state);
+    const messages = [];
+    let saves = 0;
+    const importText = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
+      () => {}, () => state.notes[0], () => { saves++; }, () => {},
+      () => ({ classList: { remove() {} } }), msg => messages.push(msg));
+    await importText(JSON.stringify(broken));
+    assert.equal(JSON.stringify(state), original, JSON.stringify(broken));
+    assert.equal(saves, 0, "Ungültige Daten dürfen nicht gespeichert werden");
+    assert.match(messages.at(-1), /Importfehler/);
+  }
+});
+
+test("Import akzeptiert gültige Notizen mit Tags und Songvorlagen", async () => {
+  const start = embedded.indexOf("async function importText(txt){");
+  const end = embedded.indexOf("\nfunction bind(){", start);
+  const createImport = new Function(
+    "state", "uid", "COLORS", "todayISO", "confirm", "fill", "selected", "save", "render", "$", "toast",
+    embedded.slice(start, end) + "\nreturn importText;"
+  );
+  const state = { notes: [{ id: "keep" }], proSong: { title: "Alt" }, selectedId: "keep" };
+  let saves = 0;
+  const importText = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
+    () => {}, () => state.notes[0], () => { saves++; }, () => {},
+    () => ({ classList: { remove() {} } }), () => {});
+  await importText(JSON.stringify({
+    notes: [{ id: "neu", title: "Titel", text: "Text", tags: ["Song", "Idee"], pinned: true, done: false }],
+    proSong: { title: "Song", templates: ["Intro", "Outro"] }
+  }));
+  assert.equal(saves, 1);
+  assert.deepEqual(state.notes[0].tags, ["Song", "Idee"]);
+  assert.equal(state.proSong.title, "Song");
+});
