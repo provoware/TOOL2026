@@ -456,11 +456,15 @@ function exportJSON(){sync();download("provoware_kompakt_backup_"+stamp()+".json
 function exportTXT(){sync();download("provoware_notizen_"+stamp()+".txt",state.notes.map(n=>`# ${n.title||"Unbenannt"}\n${n.date} · ${n.category} · ${(n.tags||[]).join(", ")}\n\n${n.text}\n\n---\n`).join("\n"),"text/plain");toast("TXT exportiert")}
 async function importText(txt){
   try{
-    const data=JSON.parse(txt),notes=Array.isArray(data)?data:data.notes;
-    if(!Array.isArray(notes))throw new Error("no notes");
-    if(data.proSong)state.proSong={...(state.proSong||{}),...data.proSong};
-    if(confirm("Vorhandene Notizen ersetzen? OK = ersetzen, Abbrechen = hinzufügen"))state.notes=[];
-    state.notes=[...notes.map(n=>({id:n.id||uid(),title:n.title||"",text:n.text||"",tags:Array.isArray(n.tags)?n.tags:[],category:n.category||"Allgemein",priority:n.priority||"normal",color:n.color||COLORS[0],date:n.date||todayISO(),pinned:!!n.pinned,done:!!n.done,createdAt:n.createdAt||new Date().toISOString(),updatedAt:n.updatedAt||new Date().toISOString()})),...state.notes];
+    const data=JSON.parse(txt),notes=Array.isArray(data)?data:data?.notes;
+    if(!Array.isArray(notes)||!notes.every(n=>n&&typeof n==="object"&&!Array.isArray(n)))throw new Error("Ungültige Notizliste");
+    if(!Array.isArray(data)&&data.proSong!==undefined&&(data.proSong===null||typeof data.proSong!=="object"||Array.isArray(data.proSong)))throw new Error("Ungültiger Songeditor");
+    // Alle Eingaben prüfen und vorbereiten, bevor vorhandene Daten verändert werden.
+    const prepared=notes.map(n=>({id:n.id||uid(),title:n.title||"",text:n.text||"",tags:Array.isArray(n.tags)?n.tags:[],category:n.category||"Allgemein",priority:n.priority||"normal",color:n.color||COLORS[0],date:n.date||todayISO(),pinned:!!n.pinned,done:!!n.done,createdAt:n.createdAt||new Date().toISOString(),updatedAt:n.updatedAt||new Date().toISOString()}));
+    const song=Array.isArray(data)||data.proSong===undefined?null:{...(state.proSong||{}),...data.proSong};
+    const replace=confirm("Vorhandene Notizen ersetzen? OK = ersetzen, Abbrechen = hinzufügen");
+    state.notes=replace?prepared:[...prepared,...state.notes];
+    if(song)state.proSong=song;
     state.selectedId=state.notes[0]?.id||null;fill(selected());save(true);render();$("importModal").classList.remove("open");toast("Import fertig");
   }catch(e){toast("Importfehler: Bitte gültige JSON-Datei wählen.")}
 }
