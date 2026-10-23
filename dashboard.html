@@ -457,8 +457,19 @@ function exportTXT(){sync();download("provoware_notizen_"+stamp()+".txt",state.n
 async function importText(txt){
   try{
     const data=JSON.parse(txt),notes=Array.isArray(data)?data:data?.notes;
-    if(!Array.isArray(notes)||!notes.every(n=>n&&typeof n==="object"&&!Array.isArray(n)))throw new Error("Ungültige Notizliste");
-    if(!Array.isArray(data)&&data.proSong!==undefined&&(data.proSong===null||typeof data.proSong!=="object"||Array.isArray(data.proSong)))throw new Error("Ungültiger Songeditor");
+    const strings=["id","title","text","category","priority","color","date","createdAt","updatedAt"];
+    const validStrings=(obj,fields)=>fields.every(key=>obj[key]===undefined||typeof obj[key]==="string");
+    const validTags=tags=>tags===undefined||(Array.isArray(tags)&&tags.every(tag=>typeof tag==="string"));
+    if(!Array.isArray(notes)||!notes.every(n=>n&&typeof n==="object"&&!Array.isArray(n)
+      &&validStrings(n,strings)&&validTags(n.tags)
+      &&["pinned","done"].every(key=>n[key]===undefined||typeof n[key]==="boolean")))
+      throw new Error("Ungültige Notizliste");
+    if(!Array.isArray(data)&&data.proSong!==undefined){
+      const song=data.proSong;
+      if(!song||typeof song!=="object"||Array.isArray(song)
+        ||!validStrings(song,["title","text","structure","tone","bpm","key"])
+        ||!validTags(song.templates))throw new Error("Ungültiger Songeditor");
+    }
     // Alle Eingaben prüfen und vorbereiten, bevor vorhandene Daten verändert werden.
     const prepared=notes.map(n=>({id:n.id||uid(),title:n.title||"",text:n.text||"",tags:Array.isArray(n.tags)?n.tags:[],category:n.category||"Allgemein",priority:n.priority||"normal",color:n.color||COLORS[0],date:n.date||todayISO(),pinned:!!n.pinned,done:!!n.done,createdAt:n.createdAt||new Date().toISOString(),updatedAt:n.updatedAt||new Date().toISOString()}));
     const song=Array.isArray(data)||data.proSong===undefined?null:{...(state.proSong||{}),...data.proSong};
