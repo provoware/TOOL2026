@@ -61,7 +61,7 @@ test("Beschädigter JSON-Import lässt Notizen und Songeditor unverändert", asy
   const original = JSON.stringify(state);
   const output = [];
   const doImport = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
-    () => {}, () => state.notes[0], () => {}, () => {},
+    () => {}, () => state.notes[0], () => true, () => {},
     () => ({ classList: { remove() {} } }), msg => output.push(msg), () => {});
   await doImport(JSON.stringify({ notes: [{ id: "eins" }, null], proSong: { title: "Unerwünscht" } }));
   assert.equal(JSON.stringify(state), original, "Fehlerhafter Import darf Daten nicht verändern");
@@ -92,7 +92,7 @@ test("Import weist beschädigte Notizfelder ohne Zustandsänderung zurück", asy
     const messages = [];
     let saves = 0;
     const importText = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
-      () => {}, () => state.notes[0], () => { saves++; }, () => {},
+      () => {}, () => state.notes[0], () => { saves++; return true; }, () => {},
       () => ({ classList: { remove() {} } }), msg => messages.push(msg), () => {});
     await importText(JSON.stringify(broken));
     assert.equal(JSON.stringify(state), original, JSON.stringify(broken));
@@ -111,7 +111,7 @@ test("Import akzeptiert gültige Notizen mit Tags und Songvorlagen", async () =>
   const state = { notes: [{ id: "keep" }], proSong: { title: "Alt" }, selectedId: "keep" };
   let saves = 0;
   const importText = createImport(state, () => "id", ["#000"], () => "2026-10-23", () => true,
-    () => {}, () => state.notes[0], () => { saves++; }, () => {},
+    () => {}, () => state.notes[0], () => { saves++; return true; }, () => {},
     () => ({ classList: { remove() {} } }), () => {}, () => {});
   await importText(JSON.stringify({
     notes: [{ id: "neu", title: "Titel", text: "Text", tags: ["Song", "Idee"], pinned: true, done: false }],
