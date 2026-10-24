@@ -1,5 +1,13 @@
 # Optimierungsprotokoll – TOOL2026
 
+## 2026-10-24: Notiz anlegen und löschen bei Speicherfehlern absichern
+
+- **Basis-HEAD:** `81ab4e56592306be8521102d4c9aee84ae53472d`; **Zweig:** `automation/20261024-note-save-rollback`.
+- **Befund:** Anlegen und Löschen änderten den laufenden Zustand und die Oberfläche auch dann, wenn der Browser das Speichern verweigerte. Der Nutzer erhielt irreführend Erfolgsmeldungen.
+- **Änderung:** Beide Aktionen speichern vor dem sichtbaren Oberflächenwechsel. Bei Fehlschlag werden Notizliste, Auswahl und beim Anlegen der Datumsfilter zurückgesetzt; verständliche Fehlermeldung statt Erfolg. Kein neues Speicherformat.
+- **Test:** Vier isolierte V8-Verhaltensfälle (Anlegen/Löschen jeweils Speichern erfolgreich/fehlgeschlagen) vor GitHub-Übertragung bestanden; zwei Node-Regressionstests ergänzt. CI-Status am finalen PR-HEAD separat nachweisen.
+- **Grenze:** Autosave, Farbauswahl, Einstellungen, Modulnachrichten, beschädigte lokale Altdaten und Browser-/Skalierungstests bleiben offen.
+
 ## 2026-10-24: JSON-Import bei Speicherfehlern sicher zurücknehmen
 
 - **Basis-HEAD:** `d2976eff7087135f0ca926716f1894c6794d49e4`; **Entwicklungszweig:** `automation/20261023-tool2026-import-schema`, **PR:** #12.
@@ -50,4 +58,4 @@
 | CI | TEILWEISE | Workflow für Node 20/22; PR-HEAD-Ergebnis abwarten |
 | Dokumentation / Release | OFFEN | Handbuch, vollständige Gates, RC-Freeze, einmalige Endabnahme |
 
-**Nächste unabhängige Pflichtaufgabe:** Allgemeine Speicherfehler bei Notizbearbeitung und Löschung absichern; danach Browser-/Skalierungstests.
+**Nächste unabhängige Pflichtaufgabe:** Autosave und weitere Speicherfehler bei Notizbearbeitung sowie beschädigte Altdaten absichern; danach Browser-/Skalierungstests.
