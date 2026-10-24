@@ -157,3 +157,65 @@ test("Import rollt bei vollem Browserspeicher zurück und meldet den Fehler", as
   assert.match(status, /Speichern blockiert/);
   assert.match(messages.at(-1), /Import abgebrochen.*Speichern blockiert/);
 });
+
+
+test("Neue Notiz: Speicherfehler stellt Auswahl und Liste wieder her", () => {
+  const start = embedded.indexOf("function create(date=");
+  const end = embedded.indexOf("\nfunction filtered(){", start);
+  assert.ok(start >= 0 && end > start);
+  const handlers = new Function(
+    "state", "sync", "uid", "COLORS", "todayISO", "selected", "confirm", "fill", "save", "render", "$", "toast",
+    embedded.slice(start, end) + "\nreturn {create,del};"
+  );
+  for (const succeeds of [false, true]) {
+    const old = { id: "old", title: "Nicht verlieren" };
+    const state = { notes: [old], selectedId: "old", selectedDate: "2026-10-24", filters: { date: "2026-10-24" } };
+    const calls = [];
+    const { create } = handlers(state, () => {}, () => "new", ["#abc"], () => "2026-10-24",
+      () => old, () => true, () => calls.push("fill"), () => succeeds,
+      () => calls.push("render"), () => ({ focus() { calls.push("focus"); } }),
+      msg => calls.push(msg));
+    create();
+    if (!succeeds) {
+      assert.deepEqual(state.notes, [old]);
+      assert.equal(state.selectedId, "old");
+      assert.equal(state.filters.date, "2026-10-24");
+      assert.ok(!calls.includes("fill") && !calls.includes("render"));
+      assert.match(calls.at(-1), /nicht gespeichert/);
+    } else {
+      assert.equal(state.notes.length, 2);
+      assert.equal(state.selectedId, "new");
+      assert.ok(calls.includes("render") && calls.includes("focus"));
+    }
+  }
+});
+
+test("Notiz löschen: Speicherfehler darf keine Löschung anzeigen", () => {
+  const start = embedded.indexOf("function create(date=");
+  const end = embedded.indexOf("\nfunction filtered(){", start);
+  assert.ok(start >= 0 && end > start);
+  const handlers = new Function(
+    "state", "sync", "uid", "COLORS", "todayISO", "selected", "confirm", "fill", "save", "render", "$", "toast",
+    embedded.slice(start, end) + "\nreturn {create,del};"
+  );
+  for (const succeeds of [false, true]) {
+    const old = { id: "old", title: "Wichtig" };
+    const state = { notes: [old], selectedId: "old", selectedDate: "2026-10-24", filters: { date: "" } };
+    const calls = [];
+    const { del } = handlers(state, () => {}, () => "new", ["#abc"], () => "2026-10-24",
+      () => state.notes.find(n => n.id === state.selectedId), () => true,
+      () => calls.push("fill"), () => succeeds, () => calls.push("render"),
+      () => ({}), msg => calls.push(msg));
+    del();
+    if (!succeeds) {
+      assert.deepEqual(state.notes, [old]);
+      assert.equal(state.selectedId, "old");
+      assert.ok(!calls.includes("fill") && !calls.includes("render"));
+      assert.match(calls.at(-1), /nicht gespeichert/);
+    } else {
+      assert.deepEqual(state.notes, []);
+      assert.equal(state.selectedId, null);
+      assert.ok(calls.includes("render"));
+    }
+  }
+});
