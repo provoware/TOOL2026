@@ -394,12 +394,24 @@ function sync(){
 }
 function create(date=state.selectedDate||todayISO()){
   sync();
+  const previous={notes:state.notes,selectedId:state.selectedId,filterDate:state.filters.date};
   const n={id:uid(),title:"",text:"",tags:[],category:"Allgemein",priority:"normal",color:COLORS[0],date,pinned:false,done:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-  state.notes.unshift(n);state.selectedId=n.id;state.filters.date="";fill(n);save(true);render();$("noteTitle").focus();toast("Neue Notiz");
+  state.notes=[n,...state.notes];state.selectedId=n.id;state.filters.date="";
+  if(!save(true,false)){
+    state.notes=previous.notes;state.selectedId=previous.selectedId;state.filters.date=previous.filterDate;
+    toast("Neue Notiz nicht gespeichert – bitte Speicher prüfen");return;
+  }
+  fill(n);render();$("noteTitle").focus();toast("Neue Notiz");
 }
 function del(){
   const n=selected();if(!n)return;if(!confirm("Notiz löschen?"))return;
-  state.notes=state.notes.filter(x=>x.id!==n.id);state.selectedId=state.notes[0]?.id||null;fill(selected());save(true);render();toast("Gelöscht");
+  const previous={notes:state.notes,selectedId:state.selectedId};
+  state.notes=state.notes.filter(x=>x.id!==n.id);state.selectedId=state.notes[0]?.id||null;
+  if(!save(true,false)){
+    state.notes=previous.notes;state.selectedId=previous.selectedId;
+    toast("Löschen nicht gespeichert – bitte Speicher prüfen");return;
+  }
+  fill(selected());render();toast("Gelöscht");
 }
 function filtered(){
   const q=(state.filters.query||"").toLowerCase(),tag=(state.filters.tag||"").toLowerCase();
